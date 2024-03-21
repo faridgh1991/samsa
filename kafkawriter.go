@@ -75,7 +75,6 @@ func NewWithContext(ctx context.Context, conf Config) (writer *KafkaWriter, err 
 // If the channel for producing messages is closed, the goroutine will close the producer and finish execution.
 // Finally, it returns a pointer to the KafkaWriter and a nil error.
 func New(conf Config) (*KafkaWriter, error) {
-	// If no formatter defined, use the default
 	var err error
 
 	kafkaConfig := sarama.NewConfig()
@@ -130,6 +129,7 @@ func New(conf Config) (*KafkaWriter, error) {
 			}
 		}
 	}()
+
 	return &h, nil
 }
 
