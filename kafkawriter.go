@@ -11,8 +11,8 @@ import (
 	"github.com/IBM/sarama"
 )
 
-// bufferSize represents the size of the buffer for storing produced messages before sending them to Kafka. It is used as the capacity of the produce channel in the KafkaWriter struct
-const bufferSize = 200
+// defaultBufferSize represents the default size of the buffer for storing produced messages before sending them to Kafka. It is used as the capacity of the produce channel in the KafkaWriter struct
+const defaultBufferSize = 200
 
 // KafkaWriter represents a writer that sends messages to Kafka using an async producer
 //
@@ -28,12 +28,15 @@ type KafkaWriter struct {
 	debug   bool
 
 	// Sync stuff
-	wg   sync.WaitGroup
-	once sync.Once
+	wg       sync.WaitGroup
+	once     sync.Once
+	Producer sarama.AsyncProducer
 }
 
 // Config represents a configuration for a KafkaWriter
 type Config struct {
+	BufferSize int
+
 	Endpoints []string
 	Topic     string
 	Producer  sarama.AsyncProducer
@@ -91,30 +94,35 @@ func New(conf Config) (*KafkaWriter, error) {
 		}
 	}
 
+	if conf.BufferSize <= 0 {
+		conf.BufferSize = defaultBufferSize
+	}
+
 	h := KafkaWriter{
-		produce: make(chan []byte, bufferSize),
-		conf:    conf,
+		produce:  make(chan []byte, conf.BufferSize),
+		Producer: conf.Producer,
+		conf:     conf,
 	}
 
 	h.wg.Add(1)
 	go func() {
 		for {
 			select {
-			case err := <-conf.Producer.Errors():
+			case err := <-h.Producer.Errors():
 				msg, _ := err.Msg.Value.Encode()
 				_, _ = fmt.Fprintf(os.Stderr, "[kafkawriter] produce error '%s' for: %s\n", err.Err, string(msg))
 
 			case buf, ok := <-h.produce:
 				if !ok {
 
-					if err := conf.Producer.Close(); err != nil {
+					if err := h.Producer.Close(); err != nil {
 						_, _ = fmt.Fprintf(os.Stderr, "[kafkawriter] producer close error: %s\n", err)
 					}
 					h.wg.Done()
 					return
 				}
 
-				conf.Producer.Input() <- &sarama.ProducerMessage{
+				h.Producer.Input() <- &sarama.ProducerMessage{
 					Value: sarama.ByteEncoder(buf),
 					Topic: conf.Topic,
 					Key:   nil,
