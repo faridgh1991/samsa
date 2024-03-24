@@ -153,3 +153,26 @@ func (h *KafkaWriter) Write(buf []byte) (n int, err error) {
 
 	return len(buf), nil
 }
+
+// WriteWithContext writes a byte buffer to the KafkaWriter's producer input channel,
+// but unlike the Write method it respects the context timeout
+// It appends a copy of the buffer to the producer input channel.
+// If the context expires before the method can write to the channel, it returns an error
+// indicating a deadline exceeded. If the input channel buffer is full, it returns an error
+// indicating a buffer overflow. The error message will include the contents of the buffer
+// that was dropped. This function returns the number of bytes written and a nil error on success.
+func (h *KafkaWriter) WriteWithContext(ctx context.Context, buf []byte) (n int, err error) {
+	select {
+	case h.produce <- append([]byte{}, buf...):
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	default:
+		// If the producer input channel buffer is full, then we better drop
+		// a log record than block program execution.
+		err = fmt.Errorf("[kafkawriter] buffer overflow: %s", string(buf))
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		return 0, err
+	}
+
+	return len(buf), nil
+}
