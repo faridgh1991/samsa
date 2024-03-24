@@ -1,4 +1,4 @@
-package kafka_writer
+package samsa
 
 import (
 	"context"
@@ -23,14 +23,13 @@ const defaultBufferSize = 200
 // - wg: a WaitGroup used for synchronization
 // - once: a sync.Once used for one-time initialization
 type KafkaWriter struct {
-	produce chan []byte
-	conf    Config
-	debug   bool
+	Producer sarama.AsyncProducer
+	produce  chan []byte
+	conf     Config
 
 	// Sync stuff
-	wg       sync.WaitGroup
-	once     sync.Once
-	Producer sarama.AsyncProducer
+	wg   sync.WaitGroup
+	once sync.Once
 }
 
 // Config represents a configuration for a KafkaWriter

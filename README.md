@@ -1,10 +1,10 @@
-# kafka writer
+# Samsa
 This is a Golang based library that enables you to write to Kafka service from your application effortlessly. It offers a simplified interface to create logs and write them into a Kafka topic.
 
 
 ## Installation
 ```Bash
-go get github.com/faridgh1991/kafka_writer
+go get github.com/faridgh1991/samsa
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ import (
 	"os"
 	"time"
 
-	kw "github.com/faridgh1991/kafka_writer"
+	kw "github.com/faridgh1991/samsa"
 )
 
 // main is the entry point of the program.

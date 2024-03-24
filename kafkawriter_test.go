@@ -1,4 +1,4 @@
-package kafka_writer
+package samsa
 
 import (
 	"github.com/IBM/sarama"

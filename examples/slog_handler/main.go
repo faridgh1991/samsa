@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/faridgh1991/kafka_writer"
+	"github.com/faridgh1991/samsa"
 )
 
 // main is the entry point of the program.

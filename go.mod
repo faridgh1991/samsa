@@ -1,4 +1,4 @@
-module github.com/faridgh1991/kafka_writer
+module github.com/faridgh1991/samsa
 
 go 1.22
 
