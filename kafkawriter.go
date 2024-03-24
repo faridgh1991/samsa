@@ -23,7 +23,7 @@ const defaultBufferSize = 200
 // - wg: a WaitGroup used for synchronization
 // - once: a sync.Once used for one-time initialization
 type KafkaWriter struct {
-	Producer sarama.AsyncProducer
+	producer sarama.AsyncProducer
 	produce  chan []byte
 	conf     Config
 
@@ -98,7 +98,7 @@ func New(conf Config) (*KafkaWriter, error) {
 
 	h := KafkaWriter{
 		produce:  make(chan []byte, conf.BufferSize),
-		Producer: conf.Producer,
+		producer: conf.Producer,
 		conf:     conf,
 	}
 
@@ -106,21 +106,21 @@ func New(conf Config) (*KafkaWriter, error) {
 	go func() {
 		for {
 			select {
-			case err := <-h.Producer.Errors():
+			case err := <-h.producer.Errors():
 				msg, _ := err.Msg.Value.Encode()
 				_, _ = fmt.Fprintf(os.Stderr, "[kafkawriter] produce error '%s' for: %s\n", err.Err, string(msg))
 
 			case buf, ok := <-h.produce:
 				if !ok {
 
-					if err := h.Producer.Close(); err != nil {
+					if err := h.producer.Close(); err != nil {
 						_, _ = fmt.Fprintf(os.Stderr, "[kafkawriter] producer close error: %s\n", err)
 					}
 					h.wg.Done()
 					return
 				}
 
-				h.Producer.Input() <- &sarama.ProducerMessage{
+				h.producer.Input() <- &sarama.ProducerMessage{
 					Value: sarama.ByteEncoder(buf),
 					Topic: conf.Topic,
 					Key:   nil,
@@ -132,11 +132,11 @@ func New(conf Config) (*KafkaWriter, error) {
 	return &h, nil
 }
 
-// Write writes a byte buffer to the KafkaWriter's producer input channel.
-// It appends a copy of the buffer to the producer input channel.
-// If the input channel buffer is full, it returns an error indicating a buffer overflow.
-// The error message will include the contents of the buffer that was dropped.
-// This function returns the number of bytes written and a nil error on success.
+// Write writes a byte buffer to the KafkaWriter's producer input channel. It appends a
+// copy of the buffer to the producer input channel. If the input channel buffer
+// is full, it returns an error indicating a buffer overflow. The error message
+// will include the contents of the buffer that was dropped. This function
+// returns the number of bytes written and a nil error on success.
 func (h *KafkaWriter) Write(buf []byte) (n int, err error) {
 	select {
 
