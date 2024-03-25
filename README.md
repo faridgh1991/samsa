@@ -1,4 +1,8 @@
 # Samsa
+[![Go Report Card](https://goreportcard.com/badge/github.com/faridgh1991/samsa)](https://goreportcard.com/report/github.com/faridgh1991/samsa)
+[![GoDoc](https://godoc.org/github.com/faridgh1991/samsa?status.svg)](https://godoc.org/github.com/faridgh1991/samsa)
+[![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/faridgh1991/samsa-Go/blob/master/LICENSE)
+
 This is a Golang based library that enables you to write to Kafka service from your application effortlessly. It offers a simplified interface to create logs and write them into a Kafka topic.
 
 
