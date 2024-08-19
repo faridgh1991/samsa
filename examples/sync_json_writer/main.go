@@ -15,11 +15,11 @@ type jsonKafkaWriter struct {
 
 func newJSONKafkaWriter() *jsonKafkaWriter {
 
-	kafkaWriter, err := samsa.NewAsyncKafkaWriterWithContext(
+	kafkaWriter, err := samsa.NewSyncKafkaWriterWithContext(
 		context.Background(),
 		samsa.Config{
 			Endpoints: []string{"localhost:9093"},
-			Topic:     "testing_topic_json",
+			Topic:     "sync_testing_topic_json4",
 		},
 	)
 
@@ -41,7 +41,10 @@ func (jkw *jsonKafkaWriter) WriteToKafka(v any) error {
 
 // main is the entry point of the program.
 func main() {
+
 	jkw := newJSONKafkaWriter()
+
+	time.Sleep(time.Second)
 
 	for i := 18; i < 98; i++ {
 		driver := &driver{
@@ -57,6 +60,7 @@ func main() {
 		}
 
 		err := jkw.WriteToKafka(driver)
+		fmt.Println(i)
 
 		if err != nil {
 			panic(err)

@@ -1,8 +1,9 @@
 package samsa
 
 import (
-	"github.com/IBM/sarama"
 	"testing"
+
+	"github.com/IBM/sarama"
 )
 
 func TestNew(t *testing.T) {
@@ -16,9 +17,9 @@ func TestNew(t *testing.T) {
 		{
 			name: "Success",
 			cfg: Config{
-				Endpoints: []string{"localhost:9092"},
-				Topic:     "test-topic",
-				Producer:  mockAsyncProducer,
+				Endpoints:     []string{"localhost:9092"},
+				Topic:         "test-topic",
+				AsyncProducer: mockAsyncProducer,
 			},
 			shouldErr: false,
 		},
@@ -35,7 +36,7 @@ func TestNew(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(
 			tc.name, func(t *testing.T) {
-				_, err := New(tc.cfg)
+				_, err := NewAsyncKafkaWriter(tc.cfg)
 				if (err != nil) != tc.shouldErr {
 					t.Errorf("New() error = %v, shouldErr %v", err, tc.shouldErr)
 				}
@@ -58,14 +59,7 @@ func (m *MockAsyncProducer) Errors() <-chan *sarama.ProducerError {
 	return m.errChan
 }
 
-func newMockAsyncProducer() *MockAsyncProducer {
-	return &MockAsyncProducer{
-		inputChan: make(chan *sarama.ProducerMessage),
-		errChan:   make(chan *sarama.ProducerError),
-	}
-}
-
-func TestWrite(t *testing.T) {
+func TestWriteAsync(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -97,9 +91,12 @@ func TestWrite(t *testing.T) {
 				conf := Config{
 					Topic:      "test-topic",
 					BufferSize: test.bufferSize,
-					Producer:   newMockAsyncProducer(),
+					AsyncProducer: &MockAsyncProducer{
+						inputChan: make(chan *sarama.ProducerMessage),
+						errChan:   make(chan *sarama.ProducerError),
+					},
 				}
-				writer, err := New(conf)
+				writer, err := NewAsyncKafkaWriter(conf)
 				if err != nil {
 					t.Fatalf("unable to create KafkaWriter: %v", err)
 				}

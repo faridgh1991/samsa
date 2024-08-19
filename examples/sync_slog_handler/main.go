@@ -11,7 +11,7 @@ import (
 
 // main is the entry point of the program.
 func main() {
-	kafkaWriter, err := samsa.NewAsyncKafkaWriterWithContext(
+	kafkaWriter, err := samsa.NewSyncKafkaWriterWithContext(
 		context.Background(),
 		samsa.Config{
 			Endpoints:  []string{"localhost:9093"},
